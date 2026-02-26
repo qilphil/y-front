@@ -53,60 +53,83 @@ function hideError() {
 let currentFormatSpec = '';
 
 function updateFormatSpec() {
-  const video = document.getElementById('video-format').value;
-  const audio = document.getElementById('audio-format').value;
-  currentFormatSpec = `${video}+${audio}`;
+  const audioRow = document.getElementById('audio-format-row');
+  const isMuxed  = audioRow && audioRow.classList.contains('d-none');
+  const video    = document.getElementById('video-format').value;
+  currentFormatSpec = isMuxed ? (video || 'best') : `${video}+${document.getElementById('audio-format').value}`;
   document.getElementById('format-spec-preview').textContent = currentFormatSpec;
   document.getElementById('format-spec-input').value = currentFormatSpec;
 }
 
 function renderFormats(data) {
-  const formats = data.formats || [];
-  const videoFmts = formats.filter((f) => f.vcodec && f.vcodec !== 'none');
-  const audioFmts = formats.filter(
-    (f) => f.acodec && f.acodec !== 'none' && (!f.vcodec || f.vcodec === 'none')
-  );
+  const formats       = data.formats || [];
+  const videoOnlyFmts = formats.filter((f) => f.vcodec && f.vcodec !== 'none' && (!f.acodec || f.acodec === 'none'));
+  const audioOnlyFmts = formats.filter((f) => f.acodec && f.acodec !== 'none' && (!f.vcodec  || f.vcodec  === 'none'));
+  const muxedFmts     = formats.filter((f) => f.vcodec && f.vcodec !== 'none' && f.acodec && f.acodec !== 'none');
+  // Muxed-only: all streams carry both video and audio (e.g. HLS from ARD, Vimeo)
+  const muxedOnly     = videoOnlyFmts.length === 0 && audioOnlyFmts.length === 0 && muxedFmts.length > 0;
 
-  // Show a notice when no specific streams were returned
+  document.getElementById('format-loading').classList.add('d-none');
   const errEl = document.getElementById('format-error');
-  if (videoFmts.length === 0 && audioFmts.length === 0) {
+
+  if (formats.length === 0) {
     errEl.className = 'alert alert-info small py-2';
     errEl.textContent = 'No format details available — "best" selection will be used automatically.';
     errEl.classList.remove('d-none');
+    document.getElementById('format-table').classList.add('d-none');
+    return;
+  }
+  errEl.classList.add('d-none');
+
+  const videoSel   = document.getElementById('video-format');
+  const audioSel   = document.getElementById('audio-format');
+  const audioRow   = document.getElementById('audio-format-row');
+  const videoLabel = document.getElementById('video-format-label');
+
+  if (muxedOnly) {
+    // Muxed streams: single dropdown, no audio track needed
+    audioRow.classList.add('d-none');
+    videoLabel.textContent = 'Format (muxed stream)';
+    videoSel.innerHTML = '<option value="best">Best (auto)</option>';
+    muxedFmts.forEach((f) => {
+      const parts = [
+        f.format_id,
+        f.ext,
+        f.resolution && f.resolution !== 'audio only' ? f.resolution : null,
+        f.fps ? f.fps + 'fps' : null,
+        f.tbr ? Math.round(f.tbr) + 'k' : null,
+      ].filter(Boolean).join(' · ');
+      videoSel.innerHTML += `<option value="${esc(f.format_id)}">${esc(parts)}</option>`;
+    });
   } else {
-    errEl.classList.add('d-none');
+    // Separate video + audio streams (normal case)
+    audioRow.classList.remove('d-none');
+    videoLabel.textContent = 'Video stream';
+    videoSel.innerHTML = '<option value="bestvideo">Best video (auto)</option>';
+    videoOnlyFmts.forEach((f) => {
+      const parts = [
+        f.format_id,
+        f.ext,
+        f.resolution && f.resolution !== 'audio only' ? f.resolution : null,
+        f.fps ? f.fps + 'fps' : null,
+        f.tbr ? Math.round(f.tbr) + 'k' : null,
+        f.format_note,
+      ].filter(Boolean).join(' · ');
+      videoSel.innerHTML += `<option value="${esc(f.format_id)}">${esc(parts)}</option>`;
+    });
+    audioSel.innerHTML = '<option value="bestaudio">Best audio (auto)</option>';
+    audioOnlyFmts.forEach((f) => {
+      const parts = [
+        f.format_id,
+        f.ext,
+        f.tbr ? Math.round(f.tbr) + 'k' : null,
+        f.format_note,
+      ].filter(Boolean).join(' · ');
+      audioSel.innerHTML += `<option value="${esc(f.format_id)}">${esc(parts)}</option>`;
+    });
   }
 
-  const videoSel = document.getElementById('video-format');
-  const audioSel = document.getElementById('audio-format');
-
-  videoSel.innerHTML = '<option value="bestvideo">Best video (auto)</option>';
-  videoFmts.forEach((f) => {
-    const parts = [
-      f.format_id,
-      f.ext,
-      f.resolution && f.resolution !== 'audio only' ? f.resolution : null,
-      f.fps ? f.fps + 'fps' : null,
-      f.tbr ? Math.round(f.tbr) + 'k' : null,
-      f.format_note,
-    ].filter(Boolean).join(' · ');
-    videoSel.innerHTML += `<option value="${esc(f.format_id)}">${esc(parts)}</option>`;
-  });
-
-  audioSel.innerHTML = '<option value="bestaudio">Best audio (auto)</option>';
-  audioFmts.forEach((f) => {
-    const parts = [
-      f.format_id,
-      f.ext,
-      f.tbr ? Math.round(f.tbr) + 'k' : null,
-      f.format_note,
-    ].filter(Boolean).join(' · ');
-    audioSel.innerHTML += `<option value="${esc(f.format_id)}">${esc(parts)}</option>`;
-  });
-
   updateFormatSpec();
-  document.getElementById('format-loading').classList.add('d-none');
-  document.getElementById('format-error').classList.add('d-none');
   document.getElementById('format-table').classList.remove('d-none');
 }
 
