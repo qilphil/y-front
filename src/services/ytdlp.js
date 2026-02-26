@@ -30,7 +30,7 @@ const run = (args) =>
  * formats: [{ format_id, ext, resolution, fps, tbr, acodec, vcodec, filesize }]
  */
 export const analyseUrl = async (url) => {
-  const raw = await run(['-j', '--no-simulate', '--no-playlist', url]);
+  const raw = await run(['-j', '--no-playlist', url]);
 
   // yt-dlp may print info/warning lines before the JSON object.
   // Find the last line that starts with '{' — that is the metadata JSON.
