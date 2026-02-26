@@ -1,0 +1,41 @@
+extends ../layout
+
+block content
+  .container
+    .d-flex.justify-content-between.align-items-center.mt-4.mb-3
+      h1.mb-0 Users
+      a.btn.btn-success(href='/users/new') + New User
+
+    if credentialsFileExists
+      .alert.alert-warning.d-flex.justify-content-between.align-items-center
+        span
+          strong admin-credentials.env
+          |  exists on the server. Delete it after saving the admin password.
+        form(action='/users/credentials/delete' method='post')
+          button.btn.btn-warning.btn-sm(type='submit') Delete credentials file
+
+    table.table.table-striped.table-hover.table-sm
+      thead.table-dark
+        tr
+          th ID
+          th Username
+          th Role
+          th Created
+          th Last Login
+          th Actions
+      tbody
+        each u in users
+          tr
+            td= u.id
+            td= u.username
+            td
+              span.badge(class=u.role === 'admin' ? 'bg-danger' : 'bg-secondary')= u.role
+            td= u.created_at
+            td= u.last_login || '—'
+            td
+              a.btn.btn-outline-primary.btn-sm.me-1(href=`/users/${u.id}/edit`) Edit
+              form.d-inline(action=`/users/${u.id}/delete` method='post')
+                button.btn.btn-outline-danger.btn-sm(
+                  type='submit'
+                  onclick='return confirm("Delete user " + this.closest("tr").cells[1].textContent + "?")'
+                ) Delete

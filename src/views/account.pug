@@ -1,0 +1,51 @@
+extends layout
+
+block content
+  .container
+    h1.mt-4 Account
+    .row.mt-4
+      .col-md-6
+        .card.mb-4
+          .card-header Change Password
+          .card-body
+            if passwordErrors && passwordErrors.length
+              .alert.alert-danger.py-2
+                each err in passwordErrors
+                  div= err.msg
+            form(action='/account' method='post')
+              .mb-3
+                label.form-label(for='current_password') Current Password
+                input#current_password.form-control(
+                  type='password'
+                  name='current_password'
+                  autocomplete='current-password'
+                  required
+                )
+              .mb-3
+                label.form-label(for='new_password') New Password
+                input#new_password.form-control(
+                  type='password'
+                  name='new_password'
+                  autocomplete='new-password'
+                  minlength='8'
+                  required
+                )
+              button.btn.btn-primary(type='submit') Change Password
+
+      .col-md-6
+        .card
+          .card-header Preferences (JSON)
+          .card-body
+            if prefErrors && prefErrors.length
+              .alert.alert-danger.py-2
+                each err in prefErrors
+                  div= err.msg
+            form(action='/account/preferences' method='post')
+              .mb-3
+                label.form-label(for='preferences') Preferences
+                textarea#preferences.form-control.font-monospace(
+                  name='preferences'
+                  rows='10'
+                  spellcheck='false'
+                )= JSON.stringify(preferences, null, 2)
+              button.btn.btn-secondary(type='submit') Save Preferences

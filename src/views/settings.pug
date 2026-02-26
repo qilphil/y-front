@@ -1,0 +1,135 @@
+extends layout
+
+block content
+  .container.mt-4(style='max-width:720px')
+    .d-flex.justify-content-between.align-items-center.mb-3
+      h4.mb-0 Settings
+      span.badge.bg-secondary Admin only
+
+    if errors && errors.length
+      .alert.alert-danger
+        ul.mb-0
+          each e in errors
+            li= e.msg
+
+    form(action='/settings' method='post')
+
+      //- ── Default download path ────────────────────────────────────────────
+      .card.mb-3
+        .card-header Default download location
+        .card-body
+          label.form-label(for='default_download_path') Path
+          .input-group
+            input#default_download_path.form-control(
+              type='text'
+              name='default_download_path'
+              value=settings.default_download_path
+              required
+            )
+            button#btn-browse.btn.btn-outline-secondary(type='button') Browse…
+          .form-text Absolute path on the server where files are saved.
+
+      //- ── Concurrent downloads ─────────────────────────────────────────────
+      .card.mb-3
+        .card-header Concurrent downloads
+        .card-body
+          label.form-label(for='max_concurrent_downloads') Max simultaneous downloads
+          input#max_concurrent_downloads.form-control(
+            type='number'
+            name='max_concurrent_downloads'
+            value=settings.max_concurrent_downloads
+            min='1'
+            max='8'
+            style='max-width:6rem'
+            required
+          )
+          .form-text Range: 1–8
+
+      //- ── Default format spec ──────────────────────────────────────────────
+      .card.mb-3
+        .card-header Default format spec
+        .card-body
+          label.form-label(for='default_format_spec') yt-dlp -f argument
+          .input-group
+            input#default_format_spec.form-control(
+              type='text'
+              name='default_format_spec'
+              value=settings.default_format_spec
+              required
+            )
+            button.btn.btn-outline-secondary.dropdown-toggle(
+              type='button'
+              data-bs-toggle='dropdown'
+              aria-expanded='false'
+            ) Presets
+            ul.dropdown-menu.dropdown-menu-end
+              li
+                a.dropdown-item.format-preset(href='#' data-spec='bestvideo+bestaudio/best')
+                  | Best (auto)
+              li
+                a.dropdown-item.format-preset(
+                  href='#'
+                  data-spec='bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
+                )
+                  | Best MP4
+              li
+                a.dropdown-item.format-preset(href='#' data-spec='bestaudio/best')
+                  | Audio Only
+          .form-text Applied to jobs that have no per-job format override.
+
+      //- ── yt-dlp binary ────────────────────────────────────────────────────
+      .card.mb-3
+        .card-header yt-dlp binary
+        .card-body
+          label.form-label Path
+          .form-control-plaintext.font-monospace= ytdlpPath
+          .form-text
+            | Set via the
+            code.ms-1 YTDLP_PATH
+            |  environment variable; leave unset to use
+            code.ms-1 yt-dlp
+            |  from
+            code.ms-1 $PATH
+            | .
+
+      //- ── Admin credentials file ───────────────────────────────────────────
+      if credFileExists
+        .card.mb-3.border-warning
+          .card-header.text-bg-warning Admin credentials file
+          .card-body
+            p.mb-1
+              | File present at
+              code.ms-1= credFilePath
+            p.text-muted.small.mb-0
+              | Delete this file once you have securely saved the admin password.
+
+      .d-flex.gap-2.mt-3
+        button.btn.btn-primary(type='submit') Save Settings
+        a.btn.btn-link.text-decoration-none(href='/queue') Cancel
+
+  //- ── Filesystem browser modal ─────────────────────────────────────────────
+  #fs-modal.modal.fade(
+    tabindex='-1'
+    aria-labelledby='fs-modal-label'
+    aria-hidden='true'
+  )
+    .modal-dialog.modal-lg
+      .modal-content
+        .modal-header
+          h5.modal-title#fs-modal-label Browse server filesystem
+          button.btn-close(type='button' data-bs-dismiss='modal' aria-label='Close')
+        .modal-body
+          .d-flex.align-items-center.gap-2.mb-2
+            button#fs-up.btn.btn-sm.btn-outline-secondary(type='button' disabled) ↑ Up
+            code#fs-current-path.flex-grow-1.small.text-break /
+          #fs-loading.text-muted.small.d-none.mb-1
+            span.spinner-border.spinner-border-sm.me-1(role='status')
+            | Loading…
+          #fs-error.alert.alert-danger.small.py-2.d-none
+          .list-group.list-group-flush#fs-entries(style='max-height:380px;overflow-y:auto')
+        .modal-footer
+          button#fs-select.btn.btn-primary(type='button') Select this directory
+          button.btn.btn-secondary(type='button' data-bs-dismiss='modal') Cancel
+
+block scripts
+  script(src='/js/settings.js')

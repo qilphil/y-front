@@ -1,0 +1,114 @@
+extends layout
+
+block content
+  .container.mt-4(style='max-width:860px')
+    h4.mb-3 Add Download
+
+    #error-message.alert.alert-danger.d-none(role='alert')
+
+    form#add-form(novalidate)
+      .mb-3
+        label.form-label.fw-semibold(for='url-input') URL
+        input#url-input.form-control(
+          type='url'
+          name='url'
+          placeholder='https://www.youtube.com/watch?v=...'
+          required
+          autocomplete='off'
+        )
+
+      .mb-3
+        .form-check
+          input.form-check-input#analyse-check(type='checkbox' name='analyse')
+          label.form-check-label(for='analyse-check')
+            | Analyse formats
+            small.text-muted.ms-2 (fetches available video/audio streams)
+
+      //- ── Format picker (shown when Analyse is checked) ───────────────────
+      #format-panel.d-none
+        .card.card-body.bg-light.mb-3
+          h6.card-title.mb-3 Format Selection
+          #format-loading.text-muted.small.mb-2.d-none
+            span.spinner-border.spinner-border-sm.me-2(role='status')
+            | Analysing URL…
+          #format-error.alert.alert-warning.small.py-2.d-none
+          #format-table.d-none
+            .row.g-2.mb-2
+              .col-sm-6
+                label.form-label.small Video stream
+                select#video-format.form-select.form-select-sm
+              .col-sm-6
+                label.form-label.small Audio stream
+                select#audio-format.form-select.form-select-sm
+            .mb-2
+              small.text-muted Format spec:&nbsp;
+              code#format-spec-preview bestvideo+bestaudio
+            .d-flex.align-items-center.gap-2
+              small.text-muted Presets:
+              button.btn.btn-sm.btn-outline-secondary(
+                type='button'
+                data-preset='bestvideo+bestaudio/best'
+              ) Best
+              button.btn.btn-sm.btn-outline-secondary(
+                type='button'
+                data-preset='bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
+              ) Best MP4
+              button.btn.btn-sm.btn-outline-secondary(
+                type='button'
+                data-preset='bestaudio/best'
+              ) Audio Only
+          input#format-spec-input(type='hidden' name='format_spec')
+
+      //- ── Output location ─────────────────────────────────────────────────
+      .row.g-2.mb-3
+        .col-sm-6
+          label.form-label.fw-semibold(for='output-dir') Output directory
+          input#output-dir.form-control(
+            type='text'
+            name='output_dir'
+            placeholder='(use server default)'
+          )
+        .col-sm-6
+          label.form-label.fw-semibold(for='subfolder') Subfolder
+          input#subfolder.form-control(
+            type='text'
+            name='subfolder'
+            placeholder='optional sub-directory'
+          )
+
+      //- ── Playlist panel (shown when playlist URL detected) ────────────────
+      #playlist-panel.d-none
+        .card.mb-3
+          .card-header.d-flex.justify-content-between.align-items-center.py-2
+            span.fw-semibold Playlist entries
+            #playlist-loading.text-muted.small.d-none
+              span.spinner-border.spinner-border-sm.me-1(role='status')
+              | Loading…
+          .card-body.p-2
+            #playlist-error.alert.alert-warning.small.py-2.d-none
+            .d-flex.flex-wrap.gap-2.mb-2
+              button#btn-select-all.btn.btn-sm.btn-outline-secondary(type='button') Select All
+              button#btn-select-none.btn.btn-sm.btn-outline-secondary(type='button') Select None
+              button#btn-invert.btn.btn-sm.btn-outline-secondary(type='button') Invert
+              input#playlist-filter.form-control.form-control-sm(
+                type='text'
+                placeholder='Regex filter…'
+                style='max-width:200px'
+              )
+            .table-responsive(style='max-height:380px;overflow-y:auto')
+              table.table.table-sm.table-hover.mb-0
+                thead.table-light(style='position:sticky;top:0;z-index:1')
+                  tr
+                    th(style='width:2rem')
+                      input#check-all.form-check-input(type='checkbox' checked)
+                    th(style='width:3rem') #
+                    th Title
+                    th(style='width:7rem') Duration
+                tbody#playlist-body
+
+      .d-flex.gap-2.mt-3
+        button#btn-submit.btn.btn-primary(type='submit') Add to Queue
+        a.btn.btn-link.text-decoration-none(href='/queue') Cancel
+
+block scripts
+  script(src='/js/add-job.js')

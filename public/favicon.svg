@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <rect width="32" height="32" rx="6" fill="#212529"/>
+  <!-- Download arrow -->
+  <path d="M16 6 L16 20 M10 14 L16 20 L22 14" stroke="#0d6efd" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Bottom bar -->
+  <rect x="8" y="24" width="16" height="2.5" rx="1.25" fill="#0d6efd"/>
+</svg>

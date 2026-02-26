@@ -1,0 +1,22 @@
+/* y-front custom overrides */
+
+.font-monospace {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+  font-size: 0.875em;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+.progress-bar-thin {
+  height: 6px;
+}
+
+/* Queue status colours */
+.status-pending   { color: #6c757d; }
+.status-running   { color: #0d6efd; }
+.status-paused    { color: #ffc107; }
+.status-completed { color: #198754; }
+.status-failed    { color: #dc3545; }
+.status-cancelled { color: #6c757d; }

@@ -1,0 +1,32 @@
+extends layout
+
+block content
+  .row.justify-content-center.mt-5
+    .col-sm-8.col-md-5.col-lg-4
+      .card.shadow-sm
+        .card-header.bg-dark.text-white
+          h5.card-title.mb-0 Sign In
+        .card-body
+          if errors && errors.length
+            .alert.alert-danger.py-2
+              each err in errors
+                div= err.msg
+          form(action='/login' method='post')
+            .mb-3
+              label.form-label(for='username') Username
+              input#username.form-control(
+                type='text'
+                name='username'
+                autocomplete='username'
+                autofocus
+                required
+              )
+            .mb-3
+              label.form-label(for='password') Password
+              input#password.form-control(
+                type='password'
+                name='password'
+                autocomplete='current-password'
+                required
+              )
+            button.btn.btn-primary.w-100(type='submit') Sign In

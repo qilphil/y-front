@@ -1,0 +1,76 @@
+extends ../layout
+
+block content
+  .container-fluid
+    h1.mt-4 Event Log
+
+    form.row.g-2.mb-3.align-items-end(method='get' action='/logs')
+      .col-auto
+        label.form-label.small Username
+        input.form-control.form-control-sm(
+          type='text'
+          name='username'
+          placeholder='Username'
+          value=query.username || ''
+        )
+      .col-auto
+        label.form-label.small Action
+        input.form-control.form-control-sm(
+          type='text'
+          name='action'
+          placeholder='Action'
+          value=query.action || ''
+        )
+      .col-auto
+        label.form-label.small Status
+        select.form-select.form-select-sm(name='status')
+          option(value='') All
+          option(value='SUCCESS' selected=query.status === 'SUCCESS') SUCCESS
+          option(value='FAILURE' selected=query.status === 'FAILURE') FAILURE
+      .col-auto
+        label.form-label.small From
+        input.form-control.form-control-sm(type='datetime-local' name='from' value=query.from || '')
+      .col-auto
+        label.form-label.small To
+        input.form-control.form-control-sm(type='datetime-local' name='to' value=query.to || '')
+      .col-auto
+        button.btn.btn-primary.btn-sm(type='submit') Filter
+        = ' '
+        a.btn.btn-secondary.btn-sm(href='/logs') Clear
+
+    p.text-muted.small Showing #{logs.length} of #{total} entries. Page #{pageNum} / #{totalPages || 1}.
+
+    table.table.table-striped.table-hover.table-sm
+      thead.table-dark
+        tr
+          th Timestamp
+          th User
+          th Action
+          th Target
+          th Status
+          th Detail
+          th IP
+      tbody
+        each log in logs
+          tr
+            td.text-nowrap= log.timestamp
+            td= log.username || '—'
+            td
+              code= log.action
+            td= log.target || '—'
+            td
+              span.badge(class=log.status === 'SUCCESS' ? 'bg-success' : 'bg-danger')= log.status
+            td
+              small= log.detail || '—'
+            td
+              small= log.ip || '—'
+
+    if totalPages > 1
+      nav(aria-label='pagination')
+        ul.pagination.pagination-sm
+          li.page-item(class=!prevUrl ? 'disabled' : '')
+            a.page-link(href=prevUrl || '#') Previous
+          li.page-item.disabled
+            span.page-link Page #{pageNum} of #{totalPages}
+          li.page-item(class=!nextUrl ? 'disabled' : '')
+            a.page-link(href=nextUrl || '#') Next

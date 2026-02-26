@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 24" width="80" height="24">
+  <!-- Icon -->
+  <rect width="24" height="24" rx="5" fill="#0d6efd"/>
+  <path d="M12 4 L12 15 M7 11 L12 16 L17 11" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <rect x="5" y="18" width="14" height="2" rx="1" fill="white"/>
+  <!-- Text -->
+  <text x="30" y="17" font-family="system-ui, sans-serif" font-size="13" font-weight="600" fill="white">y-front</text>
+</svg>

@@ -1,0 +1,139 @@
+extends ../layout
+
+block content
+  -
+    const badgeClass = (s) => ({
+      pending:   'bg-secondary',
+      running:   'bg-primary',
+      paused:    'bg-warning text-dark',
+      completed: 'bg-success',
+      failed:    'bg-danger',
+      cancelled: 'bg-dark',
+    }[s] ?? 'bg-secondary');
+
+    const fmtSpeed = (bps) => {
+      if (bps == null) return '—';
+      if (bps < 1024)    return bps.toFixed(0) + ' B/s';
+      if (bps < 1048576) return (bps / 1024).toFixed(1) + ' KiB/s';
+      return (bps / 1048576).toFixed(1) + ' MiB/s';
+    };
+
+    const fmtEta = (s) => {
+      if (s == null) return '—';
+      if (s < 60)   return s + 's';
+      if (s < 3600) return Math.floor(s / 60) + 'm ' + (s % 60) + 's';
+      return Math.floor(s / 3600) + 'h ' + Math.floor((s % 3600) / 60) + 'm';
+    };
+
+    const fmtPct = (p) => p != null ? p.toFixed(1) : '0';
+
+  .d-flex.justify-content-between.align-items-center.mt-3.mb-2.px-3
+    h4.mb-0 Download Queue
+    div
+      a.btn.btn-sm.btn-primary.me-2(href='/add') + Add
+      button#btn-clear-completed.btn.btn-sm.btn-outline-secondary(type='button') Clear Completed
+
+  .px-3
+    ul.nav.nav-tabs.mb-3#status-tabs
+      li.nav-item
+        a.nav-link.active(href='#' data-filter='all')
+          | All
+          span.badge.bg-secondary.ms-1= jobs.length
+      each tab in ['pending','running','paused','completed','failed','cancelled']
+        -
+          const cnt = jobs.filter(j => j.status === tab).length;
+        li.nav-item
+          a.nav-link(href='#' data-filter=tab)
+            = tab.charAt(0).toUpperCase() + tab.slice(1)
+            if cnt > 0
+              span.badge.ms-1(class=badgeClass(tab))= cnt
+
+    .table-responsive
+      table.table.table-sm.align-middle.mb-0#queue-table
+        thead.table-light
+          tr
+            th(style='width:2.5rem')
+            th Title / URL
+            if user.role === 'admin'
+              th(style='width:8rem') User
+            th(style='width:8rem') Status
+            th(style='width:22%') Progress
+            th(style='width:7rem') Speed
+            th(style='width:6rem') ETA
+            th(style='width:9rem') Added
+            th(style='width:9rem') Actions
+
+        tbody#queue-body
+          if jobs.length === 0
+            tr#empty-row
+              td.text-center.text-muted(colspan= user.role === 'admin' ? 9 : 8) No jobs in queue.
+          each job in jobs
+            tr.job-row(data-job-id=`${job.id}` data-status=job.status)
+              td.drag-handle.text-center.text-muted(
+                style='cursor:grab;user-select:none;font-size:1.1rem'
+                title='Drag to reorder'
+              )= job.status === 'pending' ? '⠿' : ''
+              td.job-title-cell
+                if job.title
+                  div.fw-semibold.text-truncate(style='max-width:320px' title=job.title)= job.title
+                  small.text-muted.text-truncate.d-block(style='max-width:320px' title=job.url)= job.url
+                else
+                  span.text-truncate.d-block(style='max-width:380px' title=job.url)= job.url
+                if job.error_msg && job.status === 'failed'
+                  small.text-danger.d-block(
+                    style='max-width:320px;white-space:pre-wrap;word-break:break-word'
+                    title=job.error_msg
+                  )
+                    = job.error_msg.length > 120 ? job.error_msg.slice(0, 120) + '…' : job.error_msg
+              if user.role === 'admin'
+                td.job-user-cell= job.owner_username
+              td.job-status-cell
+                span.badge.job-status-badge(class=badgeClass(job.status))= job.status
+              td.job-progress-cell
+                if job.status === 'running' || job.status === 'paused'
+                  .progress(style='height:18px')
+                    .progress-bar.progress-bar-striped(
+                      class=job.status === 'running' ? 'progress-bar-animated' : ''
+                      style=`width:${fmtPct(job.progress_pct)}%`
+                      role='progressbar'
+                      aria-valuenow=fmtPct(job.progress_pct)
+                      aria-valuemin='0'
+                      aria-valuemax='100'
+                    )
+                      small= fmtPct(job.progress_pct) + '%'
+                else if job.status === 'completed'
+                  .progress(style='height:18px')
+                    .progress-bar.bg-success(style='width:100%' role='progressbar')
+                      small 100%
+                else
+                  | —
+              td.job-speed= fmtSpeed(job.speed_bps)
+              td.job-eta= fmtEta(job.eta_sec)
+              td
+                small= job.created_at ? new Date(job.created_at).toLocaleString() : '—'
+              td.job-actions
+                .btn-group.btn-group-sm
+                  if ['pending','running','paused'].includes(job.status)
+                    button.btn.btn-outline-danger.btn-action(
+                      type='button' data-action='cancel' data-job-id=`${job.id}` title='Cancel'
+                    ) ✕
+                  if job.status === 'running'
+                    button.btn.btn-outline-warning.btn-action(
+                      type='button' data-action='pause' data-job-id=`${job.id}` title='Pause'
+                    ) ⏸
+                  if job.status === 'paused'
+                    button.btn.btn-outline-success.btn-action(
+                      type='button' data-action='resume' data-job-id=`${job.id}` title='Resume'
+                    ) ▶
+                  if ['failed','cancelled'].includes(job.status)
+                    button.btn.btn-outline-info.btn-action(
+                      type='button' data-action='retry' data-job-id=`${job.id}` title='Retry'
+                    ) ↺
+                  if !['running','paused'].includes(job.status)
+                    button.btn.btn-outline-secondary.btn-action(
+                      type='button' data-action='delete' data-job-id=`${job.id}` title='Delete'
+                    ) 🗑
+
+block scripts
+  script(src='/vendor/Sortable.min.js')
+  script(src='/js/queue.js')

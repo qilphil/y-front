@@ -1,0 +1,46 @@
+doctype html
+html(lang='en')
+  head
+    meta(charset='utf-8')
+    meta(name='viewport' content='width=device-width, initial-scale=1')
+    title= title ? `${title} — y-front` : 'y-front'
+    link(rel='stylesheet' href='/bootstrap/css/bootstrap.min.css')
+    link(rel='stylesheet' href='/css/site.css')
+    link(rel='icon' type='image/svg+xml' href='/favicon.svg')
+  body
+    nav.navbar.navbar-expand-lg.navbar-dark.bg-dark
+      .container-fluid
+        a.navbar-brand(href='/queue')
+          img(src='/images/logo.svg' height='24' alt='' style='vertical-align:text-bottom;margin-right:6px')
+          | y-front
+        button.navbar-toggler(type='button' data-bs-toggle='collapse' data-bs-target='#navMenu' aria-controls='navMenu' aria-expanded='false' aria-label='Toggle navigation')
+          span.navbar-toggler-icon
+        #navMenu.collapse.navbar-collapse
+          ul.navbar-nav.me-auto
+            if user
+              li.nav-item
+                a.nav-link(href='/queue') Queue
+              li.nav-item
+                a.nav-link(href='/add') Add
+              if user.role === 'admin'
+                li.nav-item
+                  a.nav-link(href='/settings') Settings
+                li.nav-item
+                  a.nav-link(href='/users') Users
+                li.nav-item
+                  a.nav-link(href='/logs') Logs
+          ul.navbar-nav
+            if user
+              li.nav-item
+                a.nav-link(href='/account')= user.username
+              li.nav-item
+                form(action='/logout' method='post' class='d-flex')
+                  button.btn.btn-outline-light.btn-sm.my-1(type='submit') Logout
+    .container-fluid.py-3
+      if flash
+        .alert.alert-dismissible.fade.show(role='alert' class=`alert-${flash.type}`)
+          = flash.message
+          button.btn-close(type='button' data-bs-dismiss='alert' aria-label='Close')
+      block content
+    script(src='/bootstrap/js/bootstrap.bundle.min.js')
+    block scripts

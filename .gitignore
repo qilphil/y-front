@@ -1,0 +1,8 @@
+node_modules/
+db/
+*.db
+.env
+admin-credentials.env
+.DS_Store
+Thumbs.db
+*.log
