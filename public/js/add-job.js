@@ -50,6 +50,11 @@ function hideError() {
 
 // ── Format analysis ───────────────────────────────────────────────────────────
 
+function dedup(fmts, keyFn) {
+  const seen = new Set();
+  return fmts.filter((f) => { const k = keyFn(f); if (seen.has(k)) return false; seen.add(k); return true; });
+}
+
 let currentFormatSpec = '';
 
 function updateFormatSpec() {
@@ -63,9 +68,18 @@ function updateFormatSpec() {
 
 function renderFormats(data) {
   const formats       = data.formats || [];
-  const videoOnlyFmts = formats.filter((f) => f.vcodec && f.vcodec !== 'none' && (!f.acodec || f.acodec === 'none'));
-  const audioOnlyFmts = formats.filter((f) => f.acodec && f.acodec !== 'none' && (!f.vcodec  || f.vcodec  === 'none'));
-  const muxedFmts     = formats.filter((f) => f.vcodec && f.vcodec !== 'none' && f.acodec && f.acodec !== 'none');
+  const videoOnlyFmts = dedup(
+    formats.filter((f) => f.vcodec && f.vcodec !== 'none' && (!f.acodec || f.acodec === 'none')),
+    (f) => `${f.resolution}|${f.vcodec}|${f.fps ?? ''}|${Math.round(f.tbr ?? 0)}`
+  );
+  const audioOnlyFmts = dedup(
+    formats.filter((f) => f.acodec && f.acodec !== 'none' && (!f.vcodec || f.vcodec === 'none')),
+    (f) => `${f.acodec}|${f.ext}|${f.format_note ?? ''}`
+  );
+  const muxedFmts = dedup(
+    formats.filter((f) => f.vcodec && f.vcodec !== 'none' && f.acodec && f.acodec !== 'none'),
+    (f) => `${f.resolution}|${f.vcodec}|${f.acodec}|${Math.round(f.tbr ?? 0)}`
+  );
   // Muxed-only: all streams carry both video and audio (e.g. HLS from ARD, Vimeo)
   const muxedOnly     = videoOnlyFmts.length === 0 && audioOnlyFmts.length === 0 && muxedFmts.length > 0;
 
