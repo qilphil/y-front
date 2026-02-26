@@ -2,16 +2,18 @@
 
 A multi-user web frontend for [yt-dlp](https://github.com/yt-dlp/yt-dlp) as a remote download engine.
 
-Queue URLs for download, monitor progress in real time, manage the queue with drag-and-drop reordering, and configure global settings through an admin UI — all from a browser.
+Queue URLs for download, monitor progress in real time, manage the queue with drag-and-drop reordering, browse and download completed files, and configure global settings through an admin UI — all from a browser.
 
 ## Features
 
+- **Dashboard** — quick-add form, live queue mini-list, recent downloads panel; all update via SSE
 - **Multi-user** — admin and user roles, per-user job ownership
 - **Real-time progress** — live speed, ETA, and percentage via Server-Sent Events
-- **Format picker** — analyse available formats per URL before queuing, or use global defaults
+- **Format picker** — analyse available formats per URL before queuing, or use global defaults; handles muxed-only streams (ARD, 3sat, ZDF) and deduplicates CDN variants
 - **Playlist support** — expand YouTube playlists and select individual entries
-- **Queue management** — drag-and-drop reorder, cancel, retry failed jobs
-- **Admin settings** — global format defaults, output path, filesystem browser
+- **Queue management** — drag-and-drop reorder, cancel, pause/resume, retry failed jobs
+- **File manager** — browse, sort, and download completed files; streaming binary download without loading files into memory; directory navigation with breadcrumbs
+- **Admin settings** — global format defaults, output path, max concurrent downloads
 - **Audit log** — all significant actions are logged per user
 - **No CDN** — Bootstrap and SortableJS served from local dependencies
 
