@@ -11,9 +11,26 @@ function fmtSpeed(bps) {
 
 function fmtEta(sec) {
   if (sec == null) return '—';
+  sec = Math.round(sec);
   if (sec < 60)   return sec + 's';
   if (sec < 3600) return Math.floor(sec / 60) + 'm ' + (sec % 60) + 's';
   return Math.floor(sec / 3600) + 'h ' + Math.floor((sec % 3600) / 60) + 'm';
+}
+
+// ── Rolling averages (per job, last 10 samples) ───────────────────────────────
+
+const jobBuffers = new Map(); // jobId -> { speed: number[], eta: number[] }
+
+function getBuffers(jobId) {
+  if (!jobBuffers.has(jobId)) jobBuffers.set(jobId, { speed: [], eta: [] });
+  return jobBuffers.get(jobId);
+}
+
+function pushAndAvg(buf, val) {
+  if (val == null || !isFinite(val)) return buf.length ? buf.reduce((a, b) => a + b, 0) / buf.length : null;
+  buf.push(val);
+  if (buf.length > 10) buf.shift();
+  return buf.reduce((a, b) => a + b, 0) / buf.length;
 }
 
 function badgeClass(status) {
@@ -149,14 +166,16 @@ function connectSSE() {
       if (small) small.textContent = pctStr + '%';
     }
 
+    const bufs = getBuffers(d.jobId);
     const speedCell = row.querySelector('.job-speed');
     const etaCell   = row.querySelector('.job-eta');
-    if (speedCell) speedCell.textContent = fmtSpeed(d.speed);
-    if (etaCell)   etaCell.textContent   = fmtEta(d.eta);
+    if (speedCell) speedCell.textContent = fmtSpeed(pushAndAvg(bufs.speed, d.speed));
+    if (etaCell)   etaCell.textContent   = fmtEta(pushAndAvg(bufs.eta, d.eta));
   });
 
   const onJobEvent = (e) => {
     const d = JSON.parse(e.data);
+    jobBuffers.delete(d.jobId);
     refreshRow(d.jobId);
   };
 
