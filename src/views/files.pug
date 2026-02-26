@@ -1,0 +1,50 @@
+extends layout
+
+block content
+  .container-fluid.mt-3(style='max-width:1400px')
+    .d-flex.justify-content-between.align-items-center.mb-3
+      h4.mb-0 File Manager
+      a.btn.btn-sm.btn-outline-secondary(href='/dashboard') ← Dashboard
+
+    //- Breadcrumb rendered by JS
+    #files-breadcrumb.mb-3
+
+    .card
+      .card-body.p-0
+        #files-loading.text-muted.small.p-3
+          span.spinner-border.spinner-border-sm.me-2(role='status')
+          | Loading…
+        #files-error.alert.alert-warning.m-3.d-none
+        #files-table-wrap(style='display:none')
+          .table-responsive
+            table.table.table-sm.table-hover.align-middle.mb-0#files-table
+              thead.table-light
+                tr
+                  th(style='width:2rem')
+                  th
+                    a.text-decoration-none.text-dark(href='#' data-sort='name')
+                      | Name
+                      span#sort-name-icon.ms-1 ↕
+                  th(style='width:8rem')
+                    a.text-decoration-none.text-dark(href='#' data-sort='size')
+                      | Size
+                      span#sort-size-icon.ms-1 ↕
+                  th(style='width:12rem')
+                    a.text-decoration-none.text-dark(href='#' data-sort='mtime')
+                      | Modified
+                      span#sort-mtime-icon.ms-1 ↕
+                  th(style='width:5rem') Files
+                  th(style='width:3rem')
+              tbody#files-body
+
+    //- Delete confirmation popover (shared, moved by JS)
+    #delete-confirm-popover.d-none
+      .card.shadow(style='min-width:200px')
+        .card-body.p-2
+          p.small.mb-2 Delete this file?
+          .d-flex.gap-2
+            button#delete-confirm-yes.btn.btn-danger.btn-sm Delete
+            button#delete-confirm-no.btn.btn-outline-secondary.btn-sm Cancel
+
+block scripts
+  script(src='/js/files.js')

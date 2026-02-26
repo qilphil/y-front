@@ -5,7 +5,7 @@ import { requireLogin } from '../middleware/auth.js';
 const router = Router();
 
 router.get('/', requireLogin, (req, res) => {
-  res.redirect('/queue');
+  res.redirect('/dashboard');
 });
 
 router.get('/queue', requireLogin, (req, res) => {

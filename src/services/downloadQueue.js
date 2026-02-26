@@ -151,6 +151,7 @@ const _spawn = (job, settings) => {
         jobId:        job.id,
         completed_at: new Date().toISOString(),
       });
+      emitter.emit('files:changed', { jobId: job.id });
     } else {
       const errorMsg = buildErrorMsg(code);
 

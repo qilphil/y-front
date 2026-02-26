@@ -10,7 +10,7 @@ html(lang='en')
   body
     nav.navbar.navbar-expand-lg.navbar-dark.bg-dark
       .container-fluid
-        a.navbar-brand(href='/queue')
+        a.navbar-brand(href='/dashboard')
           img(src='/images/logo.svg' height='24' alt='' style='vertical-align:text-bottom;margin-right:6px')
           | y-front
         button.navbar-toggler(type='button' data-bs-toggle='collapse' data-bs-target='#navMenu' aria-controls='navMenu' aria-expanded='false' aria-label='Toggle navigation')
@@ -19,9 +19,13 @@ html(lang='en')
           ul.navbar-nav.me-auto
             if user
               li.nav-item
+                a.nav-link(href='/dashboard') Dashboard
+              li.nav-item
                 a.nav-link(href='/queue') Queue
               li.nav-item
                 a.nav-link(href='/add') Add
+              li.nav-item
+                a.nav-link(href='/files') Files
               if user.role === 'admin'
                 li.nav-item
                   a.nav-link(href='/settings') Settings

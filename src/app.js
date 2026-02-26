@@ -8,18 +8,21 @@ import ConnectSqlite3 from 'connect-sqlite3';
 import config from './config.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
-import authRouter     from './routes/auth.js';
-import queueRouter    from './routes/queue.js';
-import addRouter      from './routes/add.js';
-import accountRouter  from './routes/account.js';
-import settingsRouter from './routes/settings.js';
-import usersRouter    from './routes/users.js';
-import logsRouter     from './routes/logs.js';
-import apiJobsRouter    from './routes/api/jobs.js';
-import apiAnalyseRouter from './routes/api/analyse.js';
-import apiPlaylistRouter from './routes/api/playlist.js';
+import authRouter      from './routes/auth.js';
+import dashboardRouter from './routes/dashboard.js';
+import queueRouter     from './routes/queue.js';
+import addRouter       from './routes/add.js';
+import accountRouter   from './routes/account.js';
+import settingsRouter  from './routes/settings.js';
+import usersRouter     from './routes/users.js';
+import logsRouter      from './routes/logs.js';
+import filesRouter     from './routes/files.js';
+import apiJobsRouter       from './routes/api/jobs.js';
+import apiAnalyseRouter    from './routes/api/analyse.js';
+import apiPlaylistRouter   from './routes/api/playlist.js';
 import apiFilesystemRouter from './routes/api/filesystem.js';
-import apiEventsRouter  from './routes/api/events.js';
+import apiFilesRouter      from './routes/api/files.js';
+import apiEventsRouter     from './routes/api/events.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SQLiteStore = ConnectSqlite3(session);
@@ -76,16 +79,19 @@ app.get('/health', (req, res) => {
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use(authRouter);
+app.use(dashboardRouter);
 app.use(queueRouter);
 app.use(addRouter);
 app.use(accountRouter);
 app.use(settingsRouter);
 app.use('/users', usersRouter);
 app.use('/logs',  logsRouter);
+app.use(filesRouter);
 app.use('/api',   apiJobsRouter);
 app.use('/api',   apiAnalyseRouter);
 app.use('/api',   apiPlaylistRouter);
 app.use('/api',   apiFilesystemRouter);
+app.use('/api',   apiFilesRouter);
 app.use('/api',   apiEventsRouter);
 
 // ── 404 ───────────────────────────────────────────────────────────────────────

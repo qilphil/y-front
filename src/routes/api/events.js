@@ -19,17 +19,19 @@ router.get('/events', requireLogin, (req, res) => {
     res.write(`event: ${eventName}\ndata: ${JSON.stringify(data)}\n\n`);
   };
 
-  const onProgress   = (d) => send('progress',      d);
-  const onStarted    = (d) => send('job:started',   d);
-  const onCompleted  = (d) => send('job:completed', d);
-  const onFailed     = (d) => send('job:failed',    d);
-  const onCancelled  = (d) => send('job:cancelled', d);
+  const onProgress     = (d) => send('progress',      d);
+  const onStarted      = (d) => send('job:started',   d);
+  const onCompleted    = (d) => send('job:completed', d);
+  const onFailed       = (d) => send('job:failed',    d);
+  const onCancelled    = (d) => send('job:cancelled', d);
+  const onFilesChanged = (d) => send('files:changed', d);
 
   emitter.on('progress',      onProgress);
   emitter.on('job:started',   onStarted);
   emitter.on('job:completed', onCompleted);
   emitter.on('job:failed',    onFailed);
   emitter.on('job:cancelled', onCancelled);
+  emitter.on('files:changed', onFilesChanged);
 
   req.on('close', () => {
     clearInterval(ping);
@@ -38,6 +40,7 @@ router.get('/events', requireLogin, (req, res) => {
     emitter.off('job:completed', onCompleted);
     emitter.off('job:failed',    onFailed);
     emitter.off('job:cancelled', onCancelled);
+    emitter.off('files:changed', onFilesChanged);
   });
 });
 

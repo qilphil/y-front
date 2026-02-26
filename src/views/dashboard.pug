@@ -1,0 +1,83 @@
+extends layout
+
+block content
+  .container-fluid.mt-3(style='max-width:1400px')
+
+    //- ── Quick Add ──────────────────────────────────────────────────────────
+    .card.mb-4
+      .card-header.fw-semibold Quick Add
+      .card-body
+        #dash-success.alert.alert-success.d-none(role='alert')
+        #dash-error.alert.alert-danger.d-none(role='alert')
+
+        form#dash-form(novalidate)
+          .row.g-2.align-items-end
+            .col
+              label.form-label.small.mb-1(for='url-input') URL
+              input#url-input.form-control(
+                type='url' name='url'
+                placeholder='https://…'
+                required autocomplete='off'
+              )
+            .col-auto
+              .form-check.mt-4
+                input.form-check-input#analyse-check(type='checkbox' name='analyse')
+                label.form-check-label(for='analyse-check') Analyse formats
+            .col-auto
+              button#btn-submit.btn.btn-primary(type='submit') Add to Queue
+
+          //- Format picker (same structure as add.pug, same IDs)
+          #format-panel.d-none.mt-3
+            .card.card-body.bg-light
+              h6.card-title.mb-3 Format Selection
+              #format-loading.text-muted.small.mb-2.d-none
+                span.spinner-border.spinner-border-sm.me-2(role='status')
+                | Analysing URL…
+              #format-error.alert.alert-warning.small.py-2.d-none
+              #format-table.d-none
+                .row.g-2.mb-2
+                  .col-sm-6
+                    label#video-format-label.form-label.small Video stream
+                    select#video-format.form-select.form-select-sm
+                  .col-sm-6#audio-format-row
+                    label.form-label.small Audio stream
+                    select#audio-format.form-select.form-select-sm
+                .mb-2
+                  small.text-muted Format spec:&nbsp;
+                  code#format-spec-preview bestvideo+bestaudio
+                .d-flex.align-items-center.gap-2
+                  small.text-muted Presets:
+                  button.btn.btn-sm.btn-outline-secondary(type='button' data-preset='bestvideo+bestaudio/best') Best
+                  button.btn.btn-sm.btn-outline-secondary(
+                    type='button'
+                    data-preset='bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
+                  ) Best MP4
+                  button.btn.btn-sm.btn-outline-secondary(type='button' data-preset='bestaudio/best') Audio Only
+              input#format-spec-input(type='hidden' name='format_spec')
+
+    //- ── Two-column: queue + recent files ───────────────────────────────────
+    .row.g-4
+      .col-lg-6
+        .card.h-100
+          .card-header.d-flex.justify-content-between.align-items-center
+            span.fw-semibold Queue
+            a.btn.btn-sm.btn-outline-secondary(href='/queue') Full view
+          .card-body.p-0
+            #dash-queue-loading.text-muted.small.p-3
+              span.spinner-border.spinner-border-sm.me-2(role='status')
+              | Loading…
+            #dash-queue(style='display:none')
+
+      .col-lg-6
+        .card.h-100
+          .card-header.d-flex.justify-content-between.align-items-center
+            span.fw-semibold Recent Downloads
+            a.btn.btn-sm.btn-outline-secondary(href='/files') File manager
+          .card-body.p-0
+            #dash-files-loading.text-muted.small.p-3
+              span.spinner-border.spinner-border-sm.me-2(role='status')
+              | Loading…
+            #dash-files(style='display:none')
+
+block scripts
+  script(src='/js/dashboard.js')
