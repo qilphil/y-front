@@ -27,6 +27,8 @@ router.get('/events', requireLogin, (req, res) => {
   const onFilesChanged  = (d) => send('files:changed',  d);
   const onYtdlpOutput   = (d) => send('ytdlp:output',   d);
   const onYtdlpDone     = (d) => send('ytdlp:done',     d);
+  const onUvOutput      = (d) => send('uv:output',      d);
+  const onUvDone        = (d) => send('uv:done',        d);
 
   emitter.on('progress',      onProgress);
   emitter.on('job:started',   onStarted);
@@ -36,6 +38,8 @@ router.get('/events', requireLogin, (req, res) => {
   emitter.on('files:changed', onFilesChanged);
   emitter.on('ytdlp:output',  onYtdlpOutput);
   emitter.on('ytdlp:done',    onYtdlpDone);
+  emitter.on('uv:output',     onUvOutput);
+  emitter.on('uv:done',       onUvDone);
 
   req.on('close', () => {
     clearInterval(ping);
@@ -47,6 +51,8 @@ router.get('/events', requireLogin, (req, res) => {
     emitter.off('files:changed', onFilesChanged);
     emitter.off('ytdlp:output',  onYtdlpOutput);
     emitter.off('ytdlp:done',    onYtdlpDone);
+    emitter.off('uv:output',     onUvOutput);
+    emitter.off('uv:done',       onUvDone);
   });
 });
 

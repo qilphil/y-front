@@ -92,6 +92,30 @@ block content
             code.ms-1 $PATH
             | .
 
+      //- ── Prerequisites ────────────────────────────────────────────────────
+      .card.mb-3
+        .card-header.d-flex.justify-content-between.align-items-center
+          span Prerequisites
+          span#prereq-spinner.spinner-border.spinner-border-sm.text-secondary.d-none(role='status')
+        .card-body
+          .row.g-3
+            .col-sm-6
+              .d-flex.align-items-start.gap-2
+                span#prereq-uv-icon.fs-5.lh-1 ·
+                div
+                  .fw-semibold uv
+                    small.text-muted.ms-1 (package manager)
+                  .small#prereq-uv-detail.text-muted Checking…
+                  button#btn-install-uv.btn.btn-sm.btn-warning.mt-2.d-none(type='button') Install uv
+            .col-sm-6
+              .d-flex.align-items-start.gap-2
+                span#prereq-ytdlp-icon.fs-5.lh-1 ·
+                div
+                  .fw-semibold yt-dlp
+                    small.text-muted.ms-1 (downloader)
+                  .small#prereq-ytdlp-detail.text-muted Checking…
+                  button#btn-install-ytdlp.btn.btn-sm.btn-warning.mt-2.d-none(type='button') Install yt-dlp
+
       //- ── yt-dlp updates ───────────────────────────────────────────────────
       .card.mb-3
         .card-header.d-flex.justify-content-between.align-items-center

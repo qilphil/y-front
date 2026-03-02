@@ -87,6 +87,132 @@ async function loadDir(path) {
   }
 }
 
+// ── Prerequisites ─────────────────────────────────────────────────────────────
+
+async function loadPrereqs() {
+  const spinner = document.getElementById('prereq-spinner');
+  if (spinner) spinner.classList.remove('d-none');
+  try {
+    const r    = await fetch('/api/ytdlp/status');
+    const data = await r.json().catch(() => ({}));
+    if (r.ok) renderPrereqs(data);
+  } finally {
+    if (spinner) spinner.classList.add('d-none');
+  }
+}
+
+function renderPrereqs(data) {
+  renderPrereqRow('uv',    data.uv,    'btn-install-uv');
+  renderPrereqRow('ytdlp', data.ytdlp, 'btn-install-ytdlp');
+
+  // Disable yt-dlp install button when uv is not yet present
+  const btnYtdlp = document.getElementById('btn-install-ytdlp');
+  if (btnYtdlp && data.ytdlp && !data.ytdlp.found) {
+    if (!data.uv?.found) {
+      btnYtdlp.disabled = true;
+      btnYtdlp.title    = 'Install uv first';
+    } else {
+      btnYtdlp.disabled = false;
+      btnYtdlp.title    = '';
+    }
+  }
+}
+
+function renderPrereqRow(key, status, btnId) {
+  const icon   = document.getElementById(`prereq-${key}-icon`);
+  const detail = document.getElementById(`prereq-${key}-detail`);
+  const btn    = document.getElementById(btnId);
+
+  if (status?.found) {
+    if (icon) {
+      icon.textContent = '✓';
+      icon.style.color = '#198754';
+    }
+    if (detail) {
+      detail.textContent = status.version || 'found';
+      if (status.path && status.path !== key) {
+        detail.textContent += ` (${status.path})`;
+      }
+    }
+    if (btn) btn.classList.add('d-none');
+  } else {
+    if (icon) {
+      icon.textContent = '✗';
+      icon.style.color = '#dc3545';
+    }
+    if (detail) detail.textContent = 'not found';
+    if (btn) btn.classList.remove('d-none');
+  }
+}
+
+// ── uv install ────────────────────────────────────────────────────────────────
+
+let uvSseConn = null;
+
+async function uvStartInstall() {
+  const wrap         = document.getElementById('ytdlp-terminal-wrap');
+  const term         = document.getElementById('ytdlp-terminal');
+  const result       = document.getElementById('ytdlp-update-result');
+  const btnInstallUv = document.getElementById('btn-install-uv');
+  const btnInstallYt = document.getElementById('btn-install-ytdlp');
+  const btnCheck     = document.getElementById('btn-ytdlp-check');
+
+  if (wrap)   wrap.classList.remove('d-none');
+  if (term)   term.textContent = '';
+  if (result) result.textContent = '';
+  [btnInstallUv, btnInstallYt, btnCheck].forEach((b) => { if (b) b.disabled = true; });
+
+  connectUvSSE();
+
+  const r    = await fetch('/api/ytdlp/install-uv', { method: 'POST' });
+  const data = await r.json().catch(() => ({}));
+
+  if (!r.ok) {
+    if (term) appendTermLine('Error: ' + (data.error || r.status), 'stderr');
+    [btnInstallUv, btnInstallYt, btnCheck].forEach((b) => { if (b) b.disabled = false; });
+    return;
+  }
+
+  if (term && data.cmd) {
+    appendTermLine('$ ' + data.cmd, 'cmd');
+  }
+}
+
+function connectUvSSE() {
+  if (uvSseConn && uvSseConn.readyState !== EventSource.CLOSED) return;
+  uvSseConn = new EventSource('/api/events');
+
+  uvSseConn.addEventListener('uv:output', (e) => {
+    const d = JSON.parse(e.data);
+    appendTermLine(d.line, d.stream);
+  });
+
+  uvSseConn.addEventListener('uv:done', async (e) => {
+    const d            = JSON.parse(e.data);
+    const result       = document.getElementById('ytdlp-update-result');
+    const btnInstallUv = document.getElementById('btn-install-uv');
+    const btnInstallYt = document.getElementById('btn-install-ytdlp');
+    const btnCheck     = document.getElementById('btn-ytdlp-check');
+
+    if (result) {
+      result.className = d.code === 0 ? 'small text-success' : 'small text-danger';
+      result.textContent = d.code === 0
+        ? `uv installed: ${d.version || '—'}` + (d.path ? ` at ${d.path}` : '')
+        : `Install failed (exit code ${d.code}).`;
+    }
+
+    // Re-check prereq status
+    await loadPrereqs();
+
+    [btnInstallUv, btnInstallYt, btnCheck].forEach((b) => { if (b) b.disabled = false; });
+
+    uvSseConn.close();
+    uvSseConn = null;
+  });
+
+  uvSseConn.onerror = () => {};
+}
+
 // ── yt-dlp update panel ───────────────────────────────────────────────────────
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -247,8 +373,9 @@ function connectYtdlpSSE() {
         : `Failed (exit code ${d.code}).`;
     }
 
-    // Refresh displayed versions
+    // Refresh displayed versions and prereq status
     if (d.version) renderVersions({ installed: d.version, latest: d.version, last_check: new Date().toISOString() });
+    await loadPrereqs();
 
     [btnUpd, btnForce, btnCheck].forEach((b) => { if (b) b.disabled = false; });
 
@@ -287,6 +414,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Prerequisites install buttons
+  document.getElementById('btn-install-uv')
+    ?.addEventListener('click', uvStartInstall);
+  document.getElementById('btn-install-ytdlp')
+    ?.addEventListener('click', () => ytdlpStartUpdate(true));
+
   // yt-dlp update buttons
   document.getElementById('btn-ytdlp-check')
     ?.addEventListener('click', ytdlpCheck);
@@ -295,5 +428,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-ytdlp-force')
     ?.addEventListener('click', () => ytdlpStartUpdate(true));
 
+  loadPrereqs();
   ytdlpLoadVersion();
 });
