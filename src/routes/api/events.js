@@ -24,7 +24,9 @@ router.get('/events', requireLogin, (req, res) => {
   const onCompleted    = (d) => send('job:completed', d);
   const onFailed       = (d) => send('job:failed',    d);
   const onCancelled    = (d) => send('job:cancelled', d);
-  const onFilesChanged = (d) => send('files:changed', d);
+  const onFilesChanged  = (d) => send('files:changed',  d);
+  const onYtdlpOutput   = (d) => send('ytdlp:output',   d);
+  const onYtdlpDone     = (d) => send('ytdlp:done',     d);
 
   emitter.on('progress',      onProgress);
   emitter.on('job:started',   onStarted);
@@ -32,6 +34,8 @@ router.get('/events', requireLogin, (req, res) => {
   emitter.on('job:failed',    onFailed);
   emitter.on('job:cancelled', onCancelled);
   emitter.on('files:changed', onFilesChanged);
+  emitter.on('ytdlp:output',  onYtdlpOutput);
+  emitter.on('ytdlp:done',    onYtdlpDone);
 
   req.on('close', () => {
     clearInterval(ping);
@@ -41,6 +45,8 @@ router.get('/events', requireLogin, (req, res) => {
     emitter.off('job:failed',    onFailed);
     emitter.off('job:cancelled', onCancelled);
     emitter.off('files:changed', onFilesChanged);
+    emitter.off('ytdlp:output',  onYtdlpOutput);
+    emitter.off('ytdlp:done',    onYtdlpDone);
   });
 });
 

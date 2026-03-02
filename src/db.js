@@ -75,6 +75,8 @@ const insertSetting = db.prepare(`INSERT OR IGNORE INTO settings (key, value) VA
 insertSetting.run('default_download_path', '/tmp/ytdlp-downloads');
 insertSetting.run('max_concurrent_downloads', '2');
 insertSetting.run('default_format_spec', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best');
+insertSetting.run('ytdlp_latest_version', '');
+insertSetting.run('ytdlp_last_check', '');
 
 // ── Bootstrap admin ───────────────────────────────────────────────────────────
 

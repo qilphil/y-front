@@ -87,6 +87,173 @@ async function loadDir(path) {
   }
 }
 
+// ── yt-dlp update panel ───────────────────────────────────────────────────────
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+let ytdlpInstalled = null;
+let ytdlpLatest    = null;
+let sseConn        = null;
+
+function renderVersions(data) {
+  ytdlpInstalled = data.installed || null;
+  ytdlpLatest    = data.latest    || null;
+
+  const instEl   = document.getElementById('ytdlp-installed');
+  const latestEl = document.getElementById('ytdlp-latest');
+  const badge    = document.getElementById('ytdlp-status-badge');
+  const lcEl     = document.getElementById('ytdlp-last-check');
+  const btnUpd   = document.getElementById('btn-ytdlp-update');
+  const btnForce = document.getElementById('btn-ytdlp-force');
+
+  if (instEl)   instEl.textContent   = ytdlpInstalled || '—';
+  if (latestEl) latestEl.textContent = ytdlpLatest    || '—';
+
+  if (badge) {
+    badge.classList.remove('d-none', 'bg-success', 'bg-warning', 'text-dark');
+    if (ytdlpInstalled && ytdlpLatest) {
+      if (ytdlpInstalled === ytdlpLatest) {
+        badge.textContent = 'up to date';
+        badge.classList.add('bg-success');
+      } else {
+        badge.textContent = 'update available';
+        badge.classList.add('bg-warning', 'text-dark');
+      }
+      badge.classList.remove('d-none');
+    }
+  }
+
+  if (data.last_check && lcEl) {
+    lcEl.textContent = new Date(data.last_check).toLocaleString(
+      undefined, { dateStyle: 'short', timeStyle: 'short' }
+    );
+  }
+
+  // Show correct action buttons
+  if (btnUpd && btnForce && ytdlpInstalled && ytdlpLatest) {
+    if (ytdlpInstalled !== ytdlpLatest) {
+      btnUpd.classList.remove('d-none');
+      btnForce.classList.add('d-none');
+    } else {
+      btnUpd.classList.add('d-none');
+      btnForce.classList.remove('d-none');
+    }
+  }
+}
+
+async function ytdlpLoadVersion() {
+  const spinner = document.getElementById('ytdlp-check-spinner');
+  if (spinner) spinner.classList.remove('d-none');
+  try {
+    const r    = await fetch('/api/ytdlp/version');
+    const data = await r.json().catch(() => ({}));
+    if (r.ok) {
+      renderVersions(data);
+      // Auto-check if last_check is missing or older than 24h
+      const lastCheck = data.last_check ? new Date(data.last_check).getTime() : 0;
+      if (!lastCheck || Date.now() - lastCheck > DAY_MS) ytdlpCheck();
+    }
+  } finally {
+    if (spinner) spinner.classList.add('d-none');
+  }
+}
+
+async function ytdlpCheck() {
+  const spinner = document.getElementById('ytdlp-check-spinner');
+  const btn     = document.getElementById('btn-ytdlp-check');
+  if (spinner) spinner.classList.remove('d-none');
+  if (btn)     btn.disabled = true;
+  try {
+    const r    = await fetch('/api/ytdlp/check', { method: 'POST' });
+    const data = await r.json().catch(() => ({}));
+    if (r.ok) renderVersions(data);
+    else {
+      const lcEl = document.getElementById('ytdlp-last-check');
+      if (lcEl) lcEl.textContent = 'Check failed: ' + (data.error || r.status);
+    }
+  } finally {
+    if (spinner) spinner.classList.add('d-none');
+    if (btn)     btn.disabled = false;
+  }
+}
+
+async function ytdlpStartUpdate(force) {
+  const wrap    = document.getElementById('ytdlp-terminal-wrap');
+  const term    = document.getElementById('ytdlp-terminal');
+  const result  = document.getElementById('ytdlp-update-result');
+  const btnUpd  = document.getElementById('btn-ytdlp-update');
+  const btnForce = document.getElementById('btn-ytdlp-force');
+  const btnCheck = document.getElementById('btn-ytdlp-check');
+
+  if (wrap) wrap.classList.remove('d-none');
+  if (term) term.textContent = '';
+  if (result) result.textContent = '';
+  [btnUpd, btnForce, btnCheck].forEach((b) => { if (b) b.disabled = true; });
+
+  // Ensure SSE is connected before kicking off the process
+  connectYtdlpSSE();
+
+  const r = await fetch(`/api/ytdlp/update${force ? '?force=true' : ''}`, { method: 'POST' });
+  const data = await r.json().catch(() => ({}));
+
+  if (!r.ok) {
+    if (term) appendTermLine('Error: ' + (data.error || r.status), 'stderr');
+    [btnUpd, btnForce, btnCheck].forEach((b) => { if (b) b.disabled = false; });
+    return;
+  }
+
+  if (term && data.args) {
+    appendTermLine('$ ' + data.args.join(' '), 'cmd');
+  }
+}
+
+function appendTermLine(line, stream) {
+  const term = document.getElementById('ytdlp-terminal');
+  if (!term) return;
+  const span = document.createElement('span');
+  span.textContent = line + '\n';
+  if (stream === 'stderr') span.style.color = '#ffc107';
+  else if (stream === 'cmd') span.style.color = '#6ea8fe';
+  term.appendChild(span);
+  term.scrollTop = term.scrollHeight;
+}
+
+function connectYtdlpSSE() {
+  if (sseConn && sseConn.readyState !== EventSource.CLOSED) return;
+  sseConn = new EventSource('/api/events');
+
+  sseConn.addEventListener('ytdlp:output', (e) => {
+    const d = JSON.parse(e.data);
+    appendTermLine(d.line, d.stream);
+  });
+
+  sseConn.addEventListener('ytdlp:done', async (e) => {
+    const d = JSON.parse(e.data);
+    const result  = document.getElementById('ytdlp-update-result');
+    const btnUpd  = document.getElementById('btn-ytdlp-update');
+    const btnForce = document.getElementById('btn-ytdlp-force');
+    const btnCheck = document.getElementById('btn-ytdlp-check');
+
+    if (result) {
+      result.className = d.code === 0 ? 'small text-success' : 'small text-danger';
+      result.textContent = d.code === 0
+        ? `Done. Installed version: ${d.version || '—'}`
+        : `Failed (exit code ${d.code}).`;
+    }
+
+    // Refresh displayed versions
+    if (d.version) renderVersions({ installed: d.version, latest: d.version, last_check: new Date().toISOString() });
+
+    [btnUpd, btnForce, btnCheck].forEach((b) => { if (b) b.disabled = false; });
+
+    // Disconnect — only needed during update
+    sseConn.close();
+    sseConn = null;
+  });
+
+  sseConn.onerror = () => {};
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const modalEl = document.getElementById('fs-modal');
   if (!modalEl) return;
@@ -113,4 +280,14 @@ document.addEventListener('DOMContentLoaded', () => {
       fsModal.hide();
     }
   });
+
+  // yt-dlp update buttons
+  document.getElementById('btn-ytdlp-check')
+    ?.addEventListener('click', ytdlpCheck);
+  document.getElementById('btn-ytdlp-update')
+    ?.addEventListener('click', () => ytdlpStartUpdate(false));
+  document.getElementById('btn-ytdlp-force')
+    ?.addEventListener('click', () => ytdlpStartUpdate(true));
+
+  ytdlpLoadVersion();
 });

@@ -92,6 +92,34 @@ block content
             code.ms-1 $PATH
             | .
 
+      //- ── yt-dlp updates ───────────────────────────────────────────────────
+      .card.mb-3
+        .card-header.d-flex.justify-content-between.align-items-center
+          span yt-dlp updates
+          span#ytdlp-check-spinner.spinner-border.spinner-border-sm.text-secondary.d-none(role='status')
+        .card-body
+          .row.g-2.mb-3
+            .col-sm-6
+              .small.text-muted.mb-1 Installed version
+              code#ytdlp-installed —
+            .col-sm-6
+              .small.text-muted.mb-1 Latest version
+              code#ytdlp-latest —
+              span#ytdlp-status-badge.badge.ms-2.d-none
+          .small.text-muted.mb-3
+            | Last checked:&nbsp;
+            span#ytdlp-last-check —
+          .d-flex.gap-2.flex-wrap
+            button#btn-ytdlp-check.btn.btn-sm.btn-outline-secondary(type='button') Check for updates
+            button#btn-ytdlp-update.btn.btn-sm.btn-primary.d-none(type='button') Install update
+            button#btn-ytdlp-force.btn.btn-sm.btn-outline-secondary.d-none(type='button') Force reinstall
+          //- Live terminal output
+          #ytdlp-terminal-wrap.mt-3.d-none
+            pre#ytdlp-terminal.bg-dark.text-light.rounded.p-3.mb-2(
+              style='height:220px;overflow-y:auto;font-size:.78rem;line-height:1.4;white-space:pre-wrap;word-break:break-all'
+            )
+            #ytdlp-update-result.small
+
       //- ── Admin credentials file ───────────────────────────────────────────
       if credFileExists
         .card.mb-3.border-warning

@@ -22,6 +22,7 @@ import apiAnalyseRouter    from './routes/api/analyse.js';
 import apiPlaylistRouter   from './routes/api/playlist.js';
 import apiFilesystemRouter from './routes/api/filesystem.js';
 import apiFilesRouter      from './routes/api/files.js';
+import apiYtdlpRouter     from './routes/api/ytdlp.js';
 import apiEventsRouter     from './routes/api/events.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -92,6 +93,7 @@ app.use('/api',   apiAnalyseRouter);
 app.use('/api',   apiPlaylistRouter);
 app.use('/api',   apiFilesystemRouter);
 app.use('/api',   apiFilesRouter);
+app.use('/api',   apiYtdlpRouter);
 app.use('/api',   apiEventsRouter);
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
