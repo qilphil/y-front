@@ -91,6 +91,12 @@ async function loadDir(path) {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+// Normalize yt-dlp version strings for comparison.
+// yt-dlp uses zero-padded segments (2026.02.21) while PyPI omits them (2026.2.21).
+function normVer(v) {
+  return (v || '').split('.').map(Number).join('.');
+}
+
 let ytdlpInstalled = null;
 let ytdlpLatest    = null;
 let sseConn        = null;
@@ -112,7 +118,7 @@ function renderVersions(data) {
   if (badge) {
     badge.classList.remove('d-none', 'bg-success', 'bg-warning', 'text-dark');
     if (ytdlpInstalled && ytdlpLatest) {
-      if (ytdlpInstalled === ytdlpLatest) {
+      if (normVer(ytdlpInstalled) === normVer(ytdlpLatest)) {
         badge.textContent = 'up to date';
         badge.classList.add('bg-success');
       } else {
@@ -131,7 +137,7 @@ function renderVersions(data) {
 
   // Show correct action buttons
   if (btnUpd && btnForce && ytdlpInstalled && ytdlpLatest) {
-    if (ytdlpInstalled !== ytdlpLatest) {
+    if (normVer(ytdlpInstalled) !== normVer(ytdlpLatest)) {
       btnUpd.classList.remove('d-none');
       btnForce.classList.add('d-none');
     } else {
