@@ -13,7 +13,8 @@ Queue URLs for download, monitor progress in real time, manage the queue with dr
 - **Playlist support** — expand YouTube playlists and select individual entries
 - **Queue management** — drag-and-drop reorder, cancel, pause/resume, retry failed jobs
 - **File manager** — browse, sort, and download completed files; streaming binary download without loading files into memory; directory navigation with breadcrumbs
-- **Admin settings** — global format defaults, output path, max concurrent downloads
+- **Subscriptions** — subscribe to YouTube channels and playlists; auto-detect new entries; per-subscription auto-download, max entries, format, and output path; file verification (marks missing files); configurable periodic background checks
+- **Admin settings** — global format defaults, output path, max concurrent downloads, subscription check interval
 - **Audit log** — all significant actions are logged per user
 - **No CDN** — Bootstrap and SortableJS served from local dependencies
 

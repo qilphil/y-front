@@ -1,0 +1,89 @@
+extends ../layout
+
+block content
+  .container-fluid.mt-4
+    .d-flex.justify-content-between.align-items-center.mb-3
+      h4.mb-0 Subscriptions
+      button.btn.btn-primary#btn-add-sub(type='button' data-bs-toggle='modal' data-bs-target='#add-sub-modal')
+        | + Add Subscription
+
+    if subs.length === 0
+      .alert.alert-info.mb-0 No subscriptions yet. Add a YouTube channel or playlist above.
+    else
+      .table-responsive
+        table.table.table-hover.align-middle
+          thead.table-dark
+            tr
+              th Name
+              th Type
+              th New
+              th Total
+              th Last checked
+              th
+          tbody
+            each sub in subs
+              tr
+                td
+                  a(href=`/subscriptions/${sub.id}`)= sub.name
+                  br
+                  small.text-muted.font-monospace(style='font-size:.7rem')= sub.url.slice(0, 60)
+                td
+                  span.badge(class=sub.type === 'channel' ? 'bg-info' : 'bg-secondary')= sub.type
+                td
+                  span.badge.bg-primary= sub.new_count || 0
+                td= sub.total_entries || 0
+                td.text-muted.small= sub.last_checked ? sub.last_checked.replace('T', ' ').slice(0, 16) : '—'
+                td.text-end
+                  a.btn.btn-sm.btn-outline-secondary.me-1(href=`/subscriptions/${sub.id}`) View
+                  button.btn.btn-sm.btn-outline-primary.me-1.btn-check-sub(
+                    type='button'
+                    data-id=sub.id
+                  ) Check
+                  button.btn.btn-sm.btn-outline-danger.btn-delete-sub(
+                    type='button'
+                    data-id=sub.id
+                    data-name=sub.name
+                  ) Delete
+
+  //- ── Add Subscription Modal ────────────────────────────────────────────────
+  #add-sub-modal.modal.fade(tabindex='-1' aria-labelledby='add-sub-label' aria-hidden='true')
+    .modal-dialog
+      .modal-content
+        .modal-header
+          h5.modal-title#add-sub-label Add Subscription
+          button.btn-close(type='button' data-bs-dismiss='modal' aria-label='Close')
+        .modal-body
+          #add-sub-error.alert.alert-danger.d-none
+          .mb-3
+            label.form-label(for='sub-url') URL
+            input#sub-url.form-control(
+              type='url'
+              placeholder='https://www.youtube.com/@channel or playlist URL'
+              required
+            )
+          .mb-3
+            label.form-label(for='sub-name') Name (optional — auto-detected)
+            input#sub-name.form-control(type='text' placeholder='Leave blank to auto-fill')
+          .mb-3
+            label.form-label(for='sub-target-path') Target path (optional)
+            input#sub-target-path.form-control(type='text' placeholder='Default download path')
+          .mb-3
+            label.form-label(for='sub-format-spec') Format spec (optional)
+            input#sub-format-spec.form-control(type='text' placeholder='Default format spec')
+          .row.mb-3
+            .col-sm-6
+              label.form-label(for='sub-max-entries') Max entries per fetch
+              input#sub-max-entries.form-control(type='number' value='50' min='0' max='1000')
+              .form-text 0 = no limit
+            .col-sm-6.d-flex.align-items-end
+              .form-check.mb-2
+                input#sub-auto-download.form-check-input(type='checkbox')
+                label.form-check-label(for='sub-auto-download') Auto-download new entries
+        .modal-footer
+          button.btn.btn-secondary(type='button' data-bs-dismiss='modal') Cancel
+          button#btn-sub-submit.btn.btn-primary(type='button')
+            span#sub-spinner.spinner-border.spinner-border-sm.me-1.d-none(role='status')
+            | Add Subscription
+
+block scripts
+  script(src='/js/subscriptions-index.js')

@@ -2,6 +2,7 @@ import 'dotenv/config';
 import app from './app.js';
 import { db } from './db.js';
 import downloadQueue from './services/downloadQueue.js';
+import { hookJobEvents, startScheduler } from './services/subscriptionService.js';
 import config from './config.js';
 
 const server = app.listen(config.PORT, '::', () => {
@@ -9,6 +10,8 @@ const server = app.listen(config.PORT, '::', () => {
 });
 
 downloadQueue.start();
+hookJobEvents(downloadQueue.getEmitter());
+startScheduler();
 
 const shutdown = async (signal) => {
   console.log(`[SHUTDOWN] Received ${signal}. Closing server...`);

@@ -1,0 +1,142 @@
+extends ../layout
+
+block content
+  .container-fluid.mt-4
+
+    //- ── Header ───────────────────────────────────────────────────────────────
+    .d-flex.flex-wrap.align-items-start.gap-2.mb-3
+      div.flex-grow-1
+        h4.mb-1
+          = sub.name + ' '
+          span.badge(class=sub.type === 'channel' ? 'bg-info' : 'bg-secondary')= sub.type
+        small.text-muted
+          a(href=sub.url target='_blank' rel='noopener noreferrer')= sub.url
+      .d-flex.gap-2.flex-wrap
+        button#btn-check.btn.btn-outline-primary(type='button' data-id=sub.id)
+          span#check-spinner.spinner-border.spinner-border-sm.me-1.d-none(role='status')
+          | Check for new
+        button#btn-verify.btn.btn-outline-secondary(type='button' data-id=sub.id)
+          span#verify-spinner.spinner-border.spinner-border-sm.me-1.d-none(role='status')
+          | Verify files
+        button#btn-edit.btn.btn-outline-secondary(type='button' data-bs-toggle='modal' data-bs-target='#edit-sub-modal') Edit
+        button#btn-delete-sub.btn.btn-outline-danger(type='button' data-id=sub.id data-name=sub.name) Delete
+
+    .text-muted.small.mb-3
+      | Last checked: #{ sub.last_checked ? sub.last_checked.replace('T',' ').slice(0,16) : 'never' }
+      if sub.auto_download
+        span.badge.bg-success.ms-2 Auto-download on
+      else
+        span.badge.bg-secondary.ms-2 Auto-download off
+
+    //- ── State filter tabs ────────────────────────────────────────────────────
+    - const states = ['new','queued','downloaded','missing','failed','skipped']
+    - const stateColors = {new:'primary',queued:'info',downloaded:'success',missing:'warning',failed:'danger',skipped:'secondary'}
+    ul.nav.nav-tabs.mb-3#state-tabs
+      li.nav-item
+        a.nav-link(
+          href=`/subscriptions/${sub.id}`
+          class=!stateFilter ? 'active' : ''
+        )
+          | All
+          span.badge.bg-dark.ms-1= Object.values(counts).reduce((a,b)=>a+b,0)
+      each s in states
+        li.nav-item
+          a.nav-link(
+            href=`/subscriptions/${sub.id}?state=${s}`
+            class=stateFilter===s ? 'active' : ''
+          )
+            = s.charAt(0).toUpperCase() + s.slice(1)
+            if counts[s]
+              span.badge.ms-1(class=`bg-${stateColors[s]}`)= counts[s]
+
+    //- ── Bulk action bar ──────────────────────────────────────────────────────
+    .d-flex.gap-2.mb-3.flex-wrap
+      button#btn-queue-selected.btn.btn-sm.btn-primary(type='button' disabled) Queue selected
+      button#btn-skip-selected.btn.btn-sm.btn-outline-secondary(type='button' disabled) Skip selected
+      button#btn-queue-all-new.btn.btn-sm.btn-outline-success(type='button') Queue all new
+
+    //- ── Entry table ──────────────────────────────────────────────────────────
+    if entries.length === 0
+      .alert.alert-info No entries#{ stateFilter ? ` with state "${stateFilter}"` : '' }.
+    else
+      .table-responsive
+        table.table.table-sm.table-hover.align-middle
+          thead.table-dark
+            tr
+              th(style='width:2rem')
+                input#select-all.form-check-input(type='checkbox')
+              th Title
+              th Duration
+              th Published
+              th State
+              th File
+              th
+          tbody
+            each e in entries
+              tr(data-entry-id=e.id)
+                td
+                  input.row-check.form-check-input(type='checkbox' value=e.id)
+                td
+                  a(href=e.url target='_blank' rel='noopener noreferrer')= e.title || e.video_id
+                td.text-muted.small= e.duration_string || (e.duration ? `${e.duration}s` : '—')
+                td.text-muted.small= e.upload_date ? e.upload_date.slice(0,10) : '—'
+                td
+                  span.badge(class=`bg-${stateColors[e.state] || 'secondary'}`)= e.state
+                td.small
+                  if e.state === 'downloaded' && e.filename
+                    span.text-success(title=e.filename) ✓
+                  else if e.state === 'missing'
+                    span.text-warning(title=e.filename || '') ✗
+                  else
+                    span.text-muted ?
+                td
+                  if e.state !== 'skipped'
+                    button.btn.btn-xs.btn-outline-secondary.btn-skip-entry(
+                      type='button'
+                      data-id=e.id
+                    ) Skip
+                  else
+                    button.btn.btn-xs.btn-outline-primary.btn-unskip-entry(
+                      type='button'
+                      data-id=e.id
+                    ) Unskip
+
+  //- ── Edit modal ───────────────────────────────────────────────────────────
+  #edit-sub-modal.modal.fade(tabindex='-1' aria-labelledby='edit-sub-label' aria-hidden='true')
+    .modal-dialog
+      .modal-content
+        .modal-header
+          h5.modal-title#edit-sub-label Edit Subscription
+          button.btn-close(type='button' data-bs-dismiss='modal' aria-label='Close')
+        .modal-body
+          #edit-sub-error.alert.alert-danger.d-none
+          .mb-3
+            label.form-label(for='edit-name') Name
+            input#edit-name.form-control(type='text' value=sub.name)
+          .mb-3
+            label.form-label(for='edit-target-path') Target path
+            input#edit-target-path.form-control(type='text' value=sub.target_path || '')
+          .mb-3
+            label.form-label(for='edit-format-spec') Format spec
+            input#edit-format-spec.form-control(type='text' value=sub.format_spec || '')
+          .row.mb-3
+            .col-sm-6
+              label.form-label(for='edit-max-entries') Max entries
+              input#edit-max-entries.form-control(type='number' value=sub.max_entries min='0' max='1000')
+            .col-sm-6.d-flex.align-items-end
+              .form-check.mb-2
+                input#edit-auto-download.form-check-input(type='checkbox' checked=sub.auto_download ? true : false)
+                label.form-check-label(for='edit-auto-download') Auto-download
+        .modal-footer
+          button.btn.btn-secondary(type='button' data-bs-dismiss='modal') Cancel
+          button#btn-edit-save.btn.btn-primary(type='button' data-id=sub.id) Save
+
+  //- ── Toast container ──────────────────────────────────────────────────────
+  .position-fixed.bottom-0.end-0.p-3(style='z-index:1100')
+    #main-toast.toast.align-items-center.border-0(role='alert' aria-live='assertive' aria-atomic='true')
+      .d-flex
+        .toast-body#toast-body
+        button.btn-close.btn-close-white.me-2.m-auto(type='button' data-bs-dismiss='toast' aria-label='Close')
+
+block scripts
+  script(src='/js/subscriptions-detail.js')

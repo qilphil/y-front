@@ -77,6 +77,21 @@ block content
                   | Audio Only
           .form-text Applied to jobs that have no per-job format override.
 
+      //- ── Subscription checks ──────────────────────────────────────────────
+      .card.mb-3
+        .card-header Subscription checks
+        .card-body
+          label.form-label(for='subscription_check_interval_hours') Check interval (hours)
+          input#subscription_check_interval_hours.form-control(
+            type='number'
+            name='subscription_check_interval_hours'
+            value=settings.subscription_check_interval_hours || '24'
+            min='1'
+            max='168'
+            style='max-width:6rem'
+          )
+          .form-text Range: 1–168 hours (168 = 1 week). Subscriptions are checked at most once per interval.
+
       //- ── yt-dlp binary ────────────────────────────────────────────────────
       .card.mb-3
         .card-header yt-dlp binary

@@ -68,8 +68,11 @@ export const analyseUrl = async (url) => {
  * Fetch playlist entries (flat, no individual video metadata).
  * Returns: { title, entries: [{ id, title, duration, duration_string, url }] }
  */
-export const fetchPlaylist = async (url) => {
-  const raw = await run(['--flat-playlist', '-J', url]);
+export const fetchPlaylist = async (url, maxEntries = 0) => {
+  const args = ['--flat-playlist', '-J'];
+  if (maxEntries > 0) args.push('--playlist-end', String(maxEntries));
+  args.push(url);
+  const raw = await run(args);
 
   // -J outputs a (possibly multi-line) JSON object that may be preceded by
   // info/warning lines. Skip forward to the first '{' to find the JSON start.
@@ -122,6 +125,7 @@ export const buildArgs = (job, settings) => {
     '--progress-template', PROGRESS_TEMPLATE,
     '-f', formatSpec,
     '-o', outputPath,
+    '--print', 'after_move:%(filepath)s',
     '--no-simulate',
     job.url,
   ];

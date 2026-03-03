@@ -23,7 +23,9 @@ import apiPlaylistRouter   from './routes/api/playlist.js';
 import apiFilesystemRouter from './routes/api/filesystem.js';
 import apiFilesRouter      from './routes/api/files.js';
 import apiYtdlpRouter     from './routes/api/ytdlp.js';
-import apiEventsRouter     from './routes/api/events.js';
+import apiEventsRouter         from './routes/api/events.js';
+import subscriptionsRouter    from './routes/subscriptions.js';
+import apiSubscriptionsRouter from './routes/api/subscriptions.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SQLiteStore = ConnectSqlite3(session);
@@ -95,6 +97,8 @@ app.use('/api',   apiFilesystemRouter);
 app.use('/api',   apiFilesRouter);
 app.use('/api',   apiYtdlpRouter);
 app.use('/api',   apiEventsRouter);
+app.use(subscriptionsRouter);
+app.use('/api',   apiSubscriptionsRouter);
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
 app.use((req, res, next) => {

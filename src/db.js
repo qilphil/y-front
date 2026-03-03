@@ -67,6 +67,37 @@ db.exec(`
     key   TEXT PRIMARY KEY,
     value TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS subscriptions (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    url             TEXT    NOT NULL,
+    name            TEXT    NOT NULL,
+    type            TEXT    NOT NULL DEFAULT 'playlist',
+    target_path     TEXT,
+    format_spec     TEXT,
+    auto_download   INTEGER NOT NULL DEFAULT 0,
+    max_entries     INTEGER NOT NULL DEFAULT 50,
+    last_checked    TEXT,
+    created_at      TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS subscription_entries (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    subscription_id INTEGER NOT NULL REFERENCES subscriptions(id) ON DELETE CASCADE,
+    video_id        TEXT    NOT NULL,
+    title           TEXT,
+    url             TEXT    NOT NULL,
+    duration        INTEGER,
+    duration_string TEXT,
+    upload_date     TEXT,
+    state           TEXT    NOT NULL DEFAULT 'new',
+    filename        TEXT,
+    job_id          INTEGER,
+    discovered_at   TEXT    NOT NULL DEFAULT (datetime('now')),
+    state_changed   TEXT    NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(subscription_id, video_id)
+  );
 `);
 
 // ── Default settings ──────────────────────────────────────────────────────────
@@ -77,6 +108,7 @@ insertSetting.run('max_concurrent_downloads', '2');
 insertSetting.run('default_format_spec', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best');
 insertSetting.run('ytdlp_latest_version', '');
 insertSetting.run('ytdlp_last_check', '');
+insertSetting.run('subscription_check_interval_hours', '24');
 
 // ── Bootstrap admin ───────────────────────────────────────────────────────────
 

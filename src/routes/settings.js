@@ -42,14 +42,23 @@ router.post('/settings', requireAdmin, validateSettings, (req, res) => {
     });
   }
 
-  const { default_download_path, max_concurrent_downloads, default_format_spec } = req.body;
+  const {
+    default_download_path,
+    max_concurrent_downloads,
+    default_format_spec,
+    subscription_check_interval_hours,
+  } = req.body;
   const { user } = req.session;
 
   const update = db.prepare('UPDATE settings SET value = ? WHERE key = ?');
   db.transaction(() => {
-    update.run(default_download_path.trim(),        'default_download_path');
-    update.run(String(max_concurrent_downloads),    'max_concurrent_downloads');
-    update.run(default_format_spec.trim(),          'default_format_spec');
+    update.run(default_download_path.trim(),     'default_download_path');
+    update.run(String(max_concurrent_downloads), 'max_concurrent_downloads');
+    update.run(default_format_spec.trim(),       'default_format_spec');
+    if (subscription_check_interval_hours != null) {
+      const hours = Math.min(168, Math.max(1, parseInt(subscription_check_interval_hours, 10) || 24));
+      update.run(String(hours),                  'subscription_check_interval_hours');
+    }
   })();
 
   downloadQueue.reloadConfig();

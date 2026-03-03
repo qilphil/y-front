@@ -66,6 +66,11 @@ const _spawn = (job, settings) => {
     lineBuf = lines.pop(); // keep incomplete tail
 
     for (const line of lines) {
+      if (line.startsWith('/') && line.length > 1) {
+        db.prepare('UPDATE download_jobs SET output_filename = ? WHERE id = ?').run(line.trim(), job.id);
+        continue;
+      }
+
       if (!line.startsWith('YTDLP_JSON ')) continue;
 
       try {
@@ -147,9 +152,11 @@ const _spawn = (job, settings) => {
         status: 'SUCCESS',
       });
 
+      const completedRow = db.prepare('SELECT output_filename FROM download_jobs WHERE id = ?').get(job.id);
       emitter.emit('job:completed', {
-        jobId:        job.id,
-        completed_at: new Date().toISOString(),
+        jobId:           job.id,
+        completed_at:    new Date().toISOString(),
+        output_filename: completedRow?.output_filename ?? null,
       });
       emitter.emit('files:changed', { jobId: job.id });
     } else {
